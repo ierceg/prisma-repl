@@ -15,23 +15,18 @@ export function loadContext(
       loadContext(r, options)
     }
   })
-  r.context.db = createPrismaClient({
+  const { PrismaClient, Prisma } = loadPrisma(options.client)
+  r.context.db = createPrismaClient(PrismaClient, {
     url: process.env.DATABASE_URL,
     verbose: options.verbose,
-    client: options.client,
   })
+  r.context.Prisma = Prisma
 }
 
-function createPrismaClient({
+function createPrismaClient(PrismaClient: any, {
   url,
   verbose,
-  client,
-}: { url?: string; verbose?: boolean; client?: string } = {}) {
-  const {
-    PrismaClient,
-  }: typeof import('@prisma/client') = require(path.resolve(
-    client || 'node_modules/@prisma/client',
-  ))
+}: { url?: string; verbose?: boolean } = {}) {
   return new PrismaClient({
     log: verbose ? ['query', 'info', 'warn', 'error'] : undefined,
     datasources: url
@@ -42,4 +37,14 @@ function createPrismaClient({
         }
       : undefined,
   })
+}
+
+function loadPrisma(client?: string) {
+  const {
+    PrismaClient,
+    Prisma,
+  }: typeof import('@prisma/client') = require(path.resolve(
+    client || 'node_modules/@prisma/client',
+  ))
+  return { PrismaClient, Prisma }
 }
